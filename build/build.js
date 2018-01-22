@@ -27,6 +27,16 @@ var COPY_PROPS = ['autocomplete', 'disabled', 'readonly', 'type'];
 var MOVE_PROPS = ['accept', 'accesskey', 'autocapitalize', 'autofocus', 'dir', 'inputmode', 'lang', 'list', 'max',
 	'maxlength', 'min', 'minlength', 'pattern', 'placeholder', 'size', 'spellcheck', 'step', 'tabindex', 'title'];
 
+// detect { passive: true } is supported
+var passiveFlag = false;
+try {
+   var _opts = Object.defineProperty({}, "passive", {
+       get: function() { passiveFlag = { passive: true }; }
+   });
+   window.addEventListener("test-passive", null, _opts);
+   window.removeEventListener("test-passive", null, _opts);
+} catch(err) {}
+
 function checkerForSeparator(separator) {
 	function simple(separator) {
 		return {
@@ -304,8 +314,8 @@ function tagsInput(input) {
 	// One tick after pasting, parse pasted text as CSV:
 	base.input.addEventListener('paste', function () { return setTimeout(savePartialInput, 0); });
 
-	base.addEventListener('mousedown', refocus);
-	base.addEventListener('touchstart', refocus);
+	base.addEventListener('mousedown', refocus, passiveFlag);
+	base.addEventListener('touchstart', refocus, passiveFlag);
 
 	base.setValue = setValue;
 	base.getValue = getValue;
