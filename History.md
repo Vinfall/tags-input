@@ -1,4 +1,9 @@
 
+2.1.8 / 2018-01-22
+==================
+
+ * use passive listeners for mousedown and touchstart
+
 2.1.7 / 2017-07-19
 ==================
 
