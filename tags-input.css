@@ -1,3 +1,14 @@
+.visuallyhidden {
+	border: 0;
+	clip: rect(0 0 0 0);
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	width: 1px;
+}
+
 .tags-input {
   display: inline-flex;
   flex-wrap: wrap;
@@ -24,7 +35,7 @@
   transition: all 100ms ease;
 }
 
-.tags-input .tag.selected {
+.tags-input:not([disabled]) .tag.selected {
   background-color: #777;
   border-color: #777;
   color: #EEE;
@@ -49,17 +60,6 @@
   font: inherit !important;
   font-size: 100% !important;
   outline: none !important;
-}
-
-.tags-input .visuallyhidden {
-	border: 0;
-	clip: rect(0 0 0 0);
-	height: 1px;
-	margin: -1px;
-	overflow: hidden;
-	padding: 0;
-	position: absolute;
-	width: 1px;
 }
 
 .tags-input .selected ~ input {

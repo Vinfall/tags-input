@@ -202,7 +202,6 @@ function tagsInput(input) {
 		allowDuplicates = checkAllowDuplicates();
 
 	insertAfter(input, base);
-	base.appendChild(input);
 	input.classList.add('visuallyhidden');
 
 	var inputType = input.getAttribute('type');
@@ -318,7 +317,19 @@ function tagsInput(input) {
 	// Add tags for existing values
 	savePartialInput(input.value, true);
 
-	return { setValue: setValue, getValue: getValue };
+	var self = { setValue: setValue, getValue: getValue };
+	Object.defineProperty(self, 'disabled', {
+		get: function () { return base.input.disabled; },
+		set: function(v) {
+			if (v) {
+				base.setAttribute('disabled', '');
+			} else {
+				base.removeAttribute('disabled');
+			}
+			base.input.disabled = v;
+		}
+	});
+	return self;
 }
 
 // make life easier:
