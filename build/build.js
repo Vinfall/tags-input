@@ -30,7 +30,7 @@
       var LEFT = 37;
       var RIGHT = 39;
       var DELETE = 46;
-      var COPY_PROPS = ["autocomplete", "disabled", "readonly", "type"];
+      var COPY_PROPS = ["autocomplete", "disabled", "readonly", "type", "list"];
       var MOVE_PROPS = [
         "accept",
         "accesskey",
@@ -39,7 +39,6 @@
         "dir",
         "inputmode",
         "lang",
-        "list",
         "max",
         "maxlength",
         "min",
@@ -96,92 +95,6 @@
         const base = createElement("div", "tags-input");
         const checker = checkerForSeparator(input.getAttribute("data-separator") || ",");
         const allowDuplicates = checkAllowDuplicates();
-        function $(selector) {
-          return base.querySelector(selector);
-        }
-        function $$(selector) {
-          return base.querySelectorAll(selector);
-        }
-        function getValue() {
-          let value = [];
-          if (base.input.value)
-            value.push(base.input.value);
-          $$(".tag").forEach(({ textContent }) => value.push(textContent));
-          return checker.join(value);
-        }
-        function setValue(value) {
-          $$(".tag").forEach((t) => base.removeChild(t));
-          savePartialInput(value, true);
-        }
-        function save(init) {
-          input.value = getValue();
-          if (init) {
-            return;
-          }
-          input.dispatchEvent(new Event("change"));
-        }
-        function checkAllowDuplicates() {
-          const allow = input.getAttribute("data-allow-duplicates") || input.getAttribute("duplicates");
-          return allow === "on" || allow === "1" || allow === "true";
-        }
-        function addTag(text) {
-          let added = false;
-          function addOneTag(text2) {
-            let tag = text2 && text2.trim();
-            if (!tag)
-              return;
-            base.input.value = text2;
-            if (!base.input.checkValidity()) {
-              base.classList.add("error");
-              setTimeout(() => base.classList.remove("error"), 150);
-              return;
-            }
-            if (!allowDuplicates) {
-              let exisingTag = $(`[data-tag="${tag}"]`);
-              if (exisingTag) {
-                exisingTag.classList.add("dupe");
-                setTimeout(() => exisingTag.classList.remove("dupe"), 100);
-                return;
-              }
-            }
-            base.insertBefore(
-              createElement("span", "tag", tag, { tag }),
-              base.input
-            );
-            added = true;
-          }
-          checker.split(text).forEach(addOneTag);
-          return added;
-        }
-        function select(el) {
-          let sel = $(".selected");
-          if (sel)
-            sel.classList.remove("selected");
-          if (el)
-            el.classList.add("selected");
-        }
-        function savePartialInput(value, init) {
-          if (typeof value !== "string" && !Array.isArray(value)) {
-            value = base.input.value;
-          }
-          if (addTag(value) !== false) {
-            base.input.value = "";
-            save(init);
-          }
-        }
-        function refocus(e) {
-          base.input.focus();
-          if (e.target.classList.contains("tag"))
-            select(e.target);
-          if (e.target === base.input)
-            return select();
-          e.preventDefault();
-          return false;
-        }
-        function dispatchEvent(name) {
-          const ce = new CustomEvent(`tags-input-${name}`, { bubbles: true });
-          input.dispatchEvent(ce);
-        }
         insertAfter(input, base);
         input.classList.add("visuallyhidden");
         let inputType = input.getAttribute("type");
@@ -201,6 +114,7 @@
           }
         });
         base.appendChild(base.input);
+        const datalistShadow = makeDatalistShadow();
         input.setAttribute("type", "text");
         input.tabIndex = -1;
         input.addEventListener("focus", () => {
@@ -272,6 +186,7 @@
           input.value = getValue();
           input.dispatchEvent(new Event("input"));
         });
+        base.input.addEventListener("change", () => setTimeout(savePartialInput, 0));
         base.input.addEventListener("paste", () => setTimeout(savePartialInput, 0));
         if (window.PointerEvent) {
           base.addEventListener("pointerdown", refocus);
@@ -282,6 +197,7 @@
         base.setValue = setValue;
         base.getValue = getValue;
         savePartialInput(input.value, true);
+        datalistShadow?.update(getValues());
         let self = { setValue, getValue };
         Object.defineProperty(self, "disabled", {
           get: () => base.input.disabled,
@@ -295,6 +211,113 @@
           }
         });
         return self;
+        function $(selector) {
+          return base.querySelector(selector);
+        }
+        function $$(selector) {
+          return base.querySelectorAll(selector);
+        }
+        function getValue(vv = getValues()) {
+          return checker.join(vv);
+        }
+        function getValues() {
+          let values = [];
+          $$(".tag").forEach(({ textContent }) => values.push(textContent));
+          if (base.input.value)
+            values.unshift(base.input.value);
+          return values;
+        }
+        function setValue(value) {
+          $$(".tag").forEach((t) => base.removeChild(t));
+          savePartialInput(value, true);
+        }
+        function save(init) {
+          const values = getValues();
+          input.value = getValue(values);
+          datalistShadow?.update(values);
+          if (init) {
+            return;
+          }
+          input.dispatchEvent(new Event("change"));
+        }
+        function checkAllowDuplicates() {
+          const allow = input.getAttribute("data-allow-duplicates") || input.getAttribute("duplicates");
+          return allow === "on" || allow === "1" || allow === "true";
+        }
+        function addTag(text) {
+          let added = false;
+          function addOneTag(text2) {
+            let tag = text2 && text2.trim();
+            if (!tag)
+              return;
+            base.input.value = text2;
+            if (!base.input.checkValidity()) {
+              base.classList.add("error");
+              setTimeout(() => base.classList.remove("error"), 150);
+              return;
+            }
+            if (!allowDuplicates) {
+              let exisingTag = $(`[data-tag="${tag}"]`);
+              if (exisingTag) {
+                exisingTag.classList.add("dupe");
+                setTimeout(() => exisingTag.classList.remove("dupe"), 100);
+                return;
+              }
+            }
+            base.insertBefore(
+              createElement("span", "tag", tag, { tag }),
+              base.input
+            );
+            added = true;
+          }
+          checker.split(text).forEach(addOneTag);
+          return added;
+        }
+        function select(el) {
+          let sel = $(".selected");
+          if (sel)
+            sel.classList.remove("selected");
+          if (el)
+            el.classList.add("selected");
+        }
+        function savePartialInput(value, init) {
+          if (typeof value !== "string" && !Array.isArray(value)) {
+            value = base.input.value;
+          }
+          if (addTag(value) !== false) {
+            base.input.value = "";
+            save(init);
+          }
+        }
+        function refocus(e) {
+          base.input.focus();
+          if (e.target.classList.contains("tag"))
+            select(e.target);
+          if (e.target === base.input)
+            return select();
+          e.preventDefault();
+          return false;
+        }
+        function dispatchEvent(name) {
+          const ce = new CustomEvent(`tags-input-${name}`, { bubbles: true });
+          input.dispatchEvent(ce);
+        }
+        function makeDatalistShadow() {
+          if (!input.list || allowDuplicates)
+            return;
+          const origList = document.getElementById(input.getAttribute("list"));
+          const datalist = origList.cloneNode();
+          datalist.id = `${origList.id}-tags-input`;
+          base.input.setAttribute("list", datalist.id);
+          insertAfter(origList, datalist);
+          return {
+            update
+          };
+          function update(values) {
+            datalist.innerHTML = "";
+            Array.from(origList.childNodes).filter((option) => !values.includes(option.value)).forEach((option) => datalist.appendChild(option.cloneNode(true)));
+          }
+        }
       }
       tagsInput2.enhance = tagsInput2.tagsInput = tagsInput2;
     }
@@ -321,3 +344,4 @@
     console.log("complete", ev.details, ev.target.value);
   }
 })();
+//# sourceMappingURL=build.js.map
