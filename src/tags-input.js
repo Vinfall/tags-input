@@ -10,6 +10,16 @@ const SEPERATOR = ',';
 
 const COPY_PROPS = 'placeholder pattern spellcheck autocomplete autocapitalize autofocus accessKey accept lang minLength maxLength required'.split(' ');
 
+// detect { passive: true } is supported
+let passiveFlag = false;
+try {
+   const _opts = Object.defineProperty({}, "passive", {
+       get: function() { passiveFlag = { passive: true }; }
+   });
+   window.addEventListener("test-passive", null, _opts);
+   window.removeEventListener("test-passive", null, _opts);
+} catch(err) {}
+
 export default function tagsInput(input) {
 	function createElement(type, name, text, attributes) {
 		let el = document.createElement(type);
@@ -219,8 +229,8 @@ export default function tagsInput(input) {
 	// One tick after pasting, parse pasted text as CSV:
 	base.input.addEventListener('paste', () => setTimeout(savePartialInput, 0));
 
-	base.addEventListener('mousedown', refocus);
-	base.addEventListener('touchstart', refocus);
+	base.addEventListener('mousedown', refocus, passiveFlag);
+	base.addEventListener('touchstart', refocus, passiveFlag);
 
 	base.setValue = setValue;
 	base.getValue = getValue;
