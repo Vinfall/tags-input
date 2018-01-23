@@ -1,4 +1,11 @@
 
+2.2.0 / 2018-01-22
+==================
+
+ * use PointerEvents if available
+ * export get/setValue for the wrapped component
+ * use .visuallyhidden to hide input
+
 2.1.8 / 2018-01-22
 ==================
 
