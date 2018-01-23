@@ -309,6 +309,8 @@ function tagsInput(input) {
 
 	// Add tags for existing values
 	savePartialInput(input.value, true);
+
+	return { setValue, getValue };
 }
 
 // make life easier:
