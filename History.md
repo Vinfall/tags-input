@@ -1,4 +1,10 @@
 
+2.3.0 / 2018-01-22
+==================
+
+ * revert to original DOM structure
+ * add support for disabling tags input
+
 2.2.0 / 2018-01-22
 ==================
 
