@@ -188,7 +188,6 @@ function tagsInput(input) {
 		allowDuplicates = checkAllowDuplicates();
 
 	insertAfter(input, base);
-	base.appendChild(input);
 	input.classList.add('visuallyhidden');
 
 	let inputType = input.getAttribute('type');
