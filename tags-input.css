@@ -24,7 +24,7 @@
   transition: all 100ms ease;
 }
 
-.tags-input .tag.selected {
+.tags-input:not([disabled]) .tag.selected {
   background-color: #777;
   border-color: #777;
   color: #EEE;
