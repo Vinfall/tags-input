@@ -199,6 +199,7 @@ function tagsInput(input) {
 
 	insertAfter(input, base);
 	base.appendChild(input);
+	input.classList.add('visuallyhidden');
 
 	let inputType = input.getAttribute('type');
 	if (!inputType || inputType === 'tags') {
