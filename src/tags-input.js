@@ -84,6 +84,10 @@ const eachNode = 'forEach' in NodeList.prototype ?
 
 function tagsInput(input) {
 
+	const base = createElement('div', 'tags-input');
+	const checker = checkerForSeparator(input.getAttribute('data-separator') || ',');
+	const allowDuplicates = checkAllowDuplicates();
+
 	function $(selector) {
 		return base.querySelector(selector);
 	}
@@ -182,10 +186,6 @@ function tagsInput(input) {
 		e.preventDefault();
 		return false;
 	}
-
-	const base = createElement('div', 'tags-input'),
-		checker = checkerForSeparator(input.getAttribute('data-separator') || ','),
-		allowDuplicates = checkAllowDuplicates();
 
 	insertAfter(input, base);
 	input.classList.add('visuallyhidden');
