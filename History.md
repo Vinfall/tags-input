@@ -1,4 +1,11 @@
 
+3.0.0 / 2019-04-12
+==================
+
+ * add `tags-input-complete` event
+ * handle ESC key
+ * stop transpiling to ES5
+
 2.3.0 / 2018-01-22
 ==================
 
