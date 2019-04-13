@@ -72,20 +72,30 @@
 	<script type="text/javascript">
 		var ti, span, tis = [];
 		var tagsInput = require('tags-input');
+
 		for (var input of document.querySelectorAll('form input')) {
 			span = input.nextElementSibling;
 			ti = tagsInput(input);
-			input.addEventListener('change', function(e) {
-				span.textContent = e.target.value;
-			});
+			input.addEventListener('change', onchange);
 			tis.push(ti);
 		}
 		document
 			.querySelector('input[type="checkbox"]')
 			.addEventListener('change', function(e) {
 				var enabled = e.target.checked;
-				tis.forEach(function(ti) { ti.disabled = !enabled });
+				tis.forEach(function(ti) { ti.disabled = !enabled; });
 			});
+		document
+			.querySelector('.forms')
+			.addEventListener('tags-input-complete', oncomplete);
+
+		function onchange(e) {
+			span.textContent = e.target.value;
+		}
+
+		function oncomplete(e) {
+			console.log('complete', e.details, e.target.value);
+		}
 
 	</script>
 </body>

@@ -5,6 +5,7 @@ module.exports = tagsInput;
 const BACKSPACE = 8,
 	TAB = 9,
 	ENTER = 13,
+	ESC = 27,
 	LEFT = 37,
 	RIGHT = 39,
 	DELETE = 46;
@@ -83,6 +84,10 @@ const eachNode = 'forEach' in NodeList.prototype ?
 	(nodeList, fn) => { for(let i = 0; i < nodeList.length; i++) fn(nodeList[i]); };
 
 function tagsInput(input) {
+
+	const base = createElement('div', 'tags-input');
+	const checker = checkerForSeparator(input.getAttribute('data-separator') || ',');
+	const allowDuplicates = checkAllowDuplicates();
 
 	function $(selector) {
 		return base.querySelector(selector);
@@ -183,9 +188,10 @@ function tagsInput(input) {
 		return false;
 	}
 
-	const base = createElement('div', 'tags-input'),
-		checker = checkerForSeparator(input.getAttribute('data-separator') || ','),
-		allowDuplicates = checkAllowDuplicates();
+	function dispatchEvent(name) {
+		const ce = new CustomEvent(`tags-input-${name}`, { bubbles: true });
+		input.dispatchEvent(ce);
+	}
 
 	insertAfter(input, base);
 	input.classList.add('visuallyhidden');
@@ -224,6 +230,7 @@ function tagsInput(input) {
 		base.classList.remove('focus');
 		select();
 		savePartialInput();
+		dispatchEvent('complete');
 	});
 
 	base.input.addEventListener('keydown', e => {
@@ -233,8 +240,16 @@ function tagsInput(input) {
 			selectedTag = $('.tag.selected'),
 			lastTag = $('.tag:last-of-type');
 
-		if (key===ENTER || key===TAB || separator) {
-			if (!el.value && !separator) return;
+		if (key === ESC) {
+			base.input.value = '';
+			base.input.blur();
+			return;
+		}
+		else if (key===ENTER || key===TAB || separator) {
+			if (!el.value && !separator) {
+				if (key === ENTER) base.input.blur();
+				return;
+			}
 			savePartialInput();
 		}
 		else if (key===DELETE && selectedTag) {
