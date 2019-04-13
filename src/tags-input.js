@@ -5,6 +5,7 @@ module.exports = tagsInput;
 const BACKSPACE = 8,
 	TAB = 9,
 	ENTER = 13,
+	ESC = 27,
 	LEFT = 37,
 	RIGHT = 39,
 	DELETE = 46;
@@ -233,7 +234,11 @@ function tagsInput(input) {
 			selectedTag = $('.tag.selected'),
 			lastTag = $('.tag:last-of-type');
 
-		if (key===ENTER || key===TAB || separator) {
+		if (key === ESC) {
+			base.input.value = '';
+			return;
+		}
+		else if (key===ENTER || key===TAB || separator) {
 			if (!el.value && !separator) return;
 			savePartialInput();
 		}
