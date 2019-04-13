@@ -188,6 +188,11 @@ function tagsInput(input) {
 		return false;
 	}
 
+	function dispatchEvent(name) {
+		const ce = new CustomEvent(`tags-input-${name}`, { bubbles: true });
+		input.dispatchEvent(ce);
+	}
+
 	insertAfter(input, base);
 	input.classList.add('visuallyhidden');
 
@@ -225,6 +230,7 @@ function tagsInput(input) {
 		base.classList.remove('focus');
 		select();
 		savePartialInput();
+		dispatchEvent('complete');
 	});
 
 	base.input.addEventListener('keydown', e => {
@@ -236,10 +242,14 @@ function tagsInput(input) {
 
 		if (key === ESC) {
 			base.input.value = '';
+			base.input.blur();
 			return;
 		}
 		else if (key===ENTER || key===TAB || separator) {
-			if (!el.value && !separator) return;
+			if (!el.value && !separator) {
+				if (key === ENTER) base.input.blur();
+				return;
+			}
 			savePartialInput();
 		}
 		else if (key===DELETE && selectedTag) {
