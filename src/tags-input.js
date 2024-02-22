@@ -79,10 +79,6 @@ function charFromKeyboardEvent(e) {
 	return e.char;
 }
 
-const eachNode = 'forEach' in NodeList.prototype ?
-	(nodeList, fn) => nodeList.forEach(fn) :
-	(nodeList, fn) => { for (let i = 0; i < nodeList.length; i++) fn(nodeList[i]); };
-
 function tagsInput(input) {
 
 	const base = createElement('div', 'tags-input');
@@ -100,12 +96,12 @@ function tagsInput(input) {
 	function getValue() {
 		let value = [];
 		if (base.input.value) value.push(base.input.value);
-		eachNode($$('.tag'), ({ textContent }) => value.push(textContent));
+		$$('.tag').forEach(({ textContent }) => value.push(textContent));
 		return checker.join(value);
 	}
 
 	function setValue(value) {
-		eachNode($$('.tag'), t => base.removeChild(t));
+		$$('.tag').forEach(t => base.removeChild(t));
 		savePartialInput(value, true);
 	}
 
