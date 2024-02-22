@@ -66,19 +66,6 @@ function caretAtStart({ selectionStart, selectionEnd, value }) {
 	}
 }
 
-function charFromKeyboardEvent(e) {
-	if ('key' in e) {
-		// most modern browsers
-		return e.key;
-	}
-	if ('keyIdentifier' in e) {
-		// Safari < 10
-		return String.fromCharCode(parseInt(event.keyIdentifier.slice(2), 16));
-	}
-	// other old/non-conforming browsers
-	return e.char;
-}
-
 function tagsInput(input) {
 
 	const base = createElement('div', 'tags-input');
@@ -232,7 +219,7 @@ function tagsInput(input) {
 	base.input.addEventListener('keydown', e => {
 		let el = base.input;
 		let key = e.keyCode || e.which;
-		let separator = checker.test(charFromKeyboardEvent(e));
+		let separator = checker.test(e.key);
 		let selectedTag = $('.tag.selected');
 		let lastTag = $('.tag:last-of-type');
 
