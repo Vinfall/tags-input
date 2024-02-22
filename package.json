@@ -11,8 +11,8 @@
     "escape-string-regexp": "^1.0.5"
   },
   "devDependencies": {
-    "browserify": "~16",
-    "jshint": "~2"
+    "@pirxpilot/jshint": "~3",
+    "esbuild": "^0.20.1"
   },
   "files": [
     "src",

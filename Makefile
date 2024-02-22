@@ -1,29 +1,38 @@
 PROJECT=tags-input
 SRC=src/tags-input.js
-NODE_BIN=./node_modules/.bin
 
 all: check compile
 
-check: lint
-
-lint: | node_modules
-	$(NODE_BIN)/jshint $(SRC)
-
 compile: build/build.js
 
-build/build.js: $(SRC) | node_modules
-	mkdir -p $(@D)
-	$(NODE_BIN)/browserify --require ./$(SRC):$(PROJECT) --outfile $@
+build:
+	mkdir -p $@
 
-.DELETE_ON_ERROR: build/build.js
+build/build.js: $(SRC) | build node_modules
+	node_modules/.bin/esbuild \
+		--bundle \
+		--define:DEBUG="true" \
+		--global-name=tagsInput \
+		--outfile=$@ \
+		$<
 
 node_modules: package.json
-	npm install && touch $@
+	yarn
+	touch $@
 
 clean:
 	rm -fr build
 
 distclean: clean
-	rm -fr node_modules
+	rm -rf node_modules
 
-.PHONY: clean lint compile all
+check: test lint
+
+lint:
+	./node_modules/.bin/jshint $(SRC)
+
+test:
+	echo "No tests yet"
+	# node --require should --require jsdom-global/register --test
+
+.PHONY: check lint test check compile

@@ -2,13 +2,13 @@ const escapeStringRegexp = require('escape-string-regexp');
 
 module.exports = tagsInput;
 
-const BACKSPACE = 8,
-	TAB = 9,
-	ENTER = 13,
-	ESC = 27,
-	LEFT = 37,
-	RIGHT = 39,
-	DELETE = 46;
+const BACKSPACE = 8;
+const TAB = 9;
+const ENTER = 13;
+const ESC = 27;
+const LEFT = 37;
+const RIGHT = 39;
+const DELETE = 46;
 
 const COPY_PROPS = ['autocomplete', 'disabled', 'readonly', 'type'];
 const MOVE_PROPS = ['accept', 'accesskey', 'autocapitalize', 'autofocus', 'dir', 'inputmode', 'lang', 'list', 'max',
@@ -51,37 +51,20 @@ function createElement(type, name, text, attributes) {
 	return el;
 }
 
-function insertAfter(child, el) {
-	return child.nextSibling ?
-		child.parentNode.insertBefore(el, child.nextSibling) :
-		child.parentNode.appendChild(el);
+function insertAfter({ nextSibling, parentNode }, el) {
+	return nextSibling ?
+		parentNode.insertBefore(el, nextSibling) :
+		parentNode.appendChild(el);
 }
 
-function caretAtStart(el) {
+function caretAtStart({ selectionStart, selectionEnd, value }) {
 	try {
-		return el.selectionStart === 0 && el.selectionEnd === 0;
+		return selectionStart === 0 && selectionEnd === 0;
 	}
-	catch(e) {
-		return el.value === '';
+	catch {
+		return value === '';
 	}
 }
-
-function charFromKeyboardEvent(e) {
-	if ('key' in e) {
-		// most modern browsers
-		return e.key;
-	}
-	if ('keyIdentifier' in e) {
-		// Safari < 10
-		return String.fromCharCode(parseInt(event.keyIdentifier.slice(2), 16));
-	}
-	// other old/non-conforming browsers
-	return e.char;
-}
-
-const eachNode = 'forEach' in NodeList.prototype ?
-	(nodeList, fn) => nodeList.forEach(fn) :
-	(nodeList, fn) => { for(let i = 0; i < nodeList.length; i++) fn(nodeList[i]); };
 
 function tagsInput(input) {
 
@@ -100,19 +83,19 @@ function tagsInput(input) {
 	function getValue() {
 		let value = [];
 		if (base.input.value) value.push(base.input.value);
-		eachNode($$('.tag'), t => value.push(t.textContent));
+		$$('.tag').forEach(({ textContent }) => value.push(textContent));
 		return checker.join(value);
 	}
 
 	function setValue(value) {
-		eachNode($$('.tag'), t => base.removeChild(t));
+		$$('.tag').forEach(t => base.removeChild(t));
 		savePartialInput(value, true);
 	}
 
 	function save(init) {
 		input.value = getValue();
 		if (init) {
-		    return;
+			return;
 		}
 		input.dispatchEvent(new Event('change'));
 	}
@@ -126,7 +109,7 @@ function tagsInput(input) {
 
 	// Return false if no need to add a tag
 	function addTag(text) {
-	    var added = false;
+		let added = false;
 		function addOneTag(text) {
 			let tag = text && text.trim();
 			// Ignore if text is empty
@@ -137,7 +120,7 @@ function tagsInput(input) {
 			base.input.value = text;
 			if (!base.input.checkValidity()) {
 				base.classList.add('error');
-				setTimeout( () => base.classList.remove('error') , 150);
+				setTimeout(() => base.classList.remove('error'), 150);
 				return;
 			}
 
@@ -146,7 +129,7 @@ function tagsInput(input) {
 				let exisingTag = $(`[data-tag="${tag}"]`);
 				if (exisingTag) {
 					exisingTag.classList.add('dupe');
-					setTimeout( () => exisingTag.classList.remove('dupe') , 100);
+					setTimeout(() => exisingTag.classList.remove('dupe'), 100);
 					return;
 				}
 			}
@@ -170,11 +153,11 @@ function tagsInput(input) {
 	}
 
 	function savePartialInput(value, init) {
-		if (typeof value!=='string' && !Array.isArray(value)) {
+		if (typeof value !== 'string' && !Array.isArray(value)) {
 			// If the base input does not contain a value, default to the original element passed
 			value = base.input.value;
 		}
-		if (addTag(value)!==false) {
+		if (addTag(value) !== false) {
 			base.input.value = '';
 			save(init);
 		}
@@ -183,7 +166,7 @@ function tagsInput(input) {
 	function refocus(e) {
 		base.input.focus();
 		if (e.target.classList.contains('tag')) select(e.target);
-		if (e.target===base.input) return select();
+		if (e.target === base.input) return select();
 		e.preventDefault();
 		return false;
 	}
@@ -234,30 +217,30 @@ function tagsInput(input) {
 	});
 
 	base.input.addEventListener('keydown', e => {
-		let el = base.input,
-			key = e.keyCode || e.which,
-			separator = checker.test(charFromKeyboardEvent(e)),
-			selectedTag = $('.tag.selected'),
-			lastTag = $('.tag:last-of-type');
+		let el = base.input;
+		let key = e.keyCode || e.which;
+		let separator = checker.test(e.key);
+		let selectedTag = $('.tag.selected');
+		let lastTag = $('.tag:last-of-type');
 
 		if (key === ESC) {
 			base.input.value = '';
 			base.input.blur();
 			return;
 		}
-		else if (key===ENTER || key===TAB || separator) {
+		else if (key === ENTER || key === TAB || separator) {
 			if (!el.value && !separator) {
 				if (key === ENTER) base.input.blur();
 				return;
 			}
 			savePartialInput();
 		}
-		else if (key===DELETE && selectedTag) {
-			if (selectedTag!==lastTag) select(selectedTag.nextSibling);
+		else if (key === DELETE && selectedTag) {
+			if (selectedTag !== lastTag) select(selectedTag.nextSibling);
 			base.removeChild(selectedTag);
 			save();
 		}
-		else if (key===BACKSPACE) {
+		else if (key === BACKSPACE) {
 			if (selectedTag) {
 				select(selectedTag.previousSibling);
 				base.removeChild(selectedTag);
@@ -270,7 +253,7 @@ function tagsInput(input) {
 				return;
 			}
 		}
-		else if (key===LEFT) {
+		else if (key === LEFT) {
 			if (selectedTag) {
 				if (selectedTag.previousSibling) {
 					select(selectedTag.previousSibling);
@@ -283,7 +266,7 @@ function tagsInput(input) {
 				select(lastTag);
 			}
 		}
-		else if (key===RIGHT) {
+		else if (key === RIGHT) {
 			if (!selectedTag) return;
 			select(selectedTag.nextSibling);
 		}
@@ -321,7 +304,7 @@ function tagsInput(input) {
 	let self = { setValue, getValue };
 	Object.defineProperty(self, 'disabled', {
 		get: () => base.input.disabled,
-		set: function(v) {
+		set(v) {
 			if (v) {
 				base.setAttribute('disabled', '');
 			} else {
