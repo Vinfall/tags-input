@@ -285,6 +285,9 @@ function tagsInput(input) {
 		input.dispatchEvent(new Event('input'));
 	});
 
+	// handle selection from datalist
+	base.input.addEventListener('change', () => setTimeout(savePartialInput, 0));
+
 	// One tick after pasting, parse pasted text as CSV:
 	base.input.addEventListener('paste', () => setTimeout(savePartialInput, 0));
 
