@@ -12,6 +12,7 @@ build/build.js: demo/index.js $(SRC) | build node_modules
 	node_modules/.bin/esbuild \
 		--bundle \
 		--define:DEBUG="true" \
+		--sourcemap \
 		--outfile=$@ \
 		$<
 
