@@ -10,8 +10,8 @@ const LEFT = 37;
 const RIGHT = 39;
 const DELETE = 46;
 
-const COPY_PROPS = ['autocomplete', 'disabled', 'readonly', 'type'];
-const MOVE_PROPS = ['accept', 'accesskey', 'autocapitalize', 'autofocus', 'dir', 'inputmode', 'lang', 'list', 'max',
+const COPY_PROPS = ['autocomplete', 'disabled', 'readonly', 'type', 'list'];
+const MOVE_PROPS = ['accept', 'accesskey', 'autocapitalize', 'autofocus', 'dir', 'inputmode', 'lang', 'max',
 	'maxlength', 'min', 'minlength', 'pattern', 'placeholder', 'size', 'spellcheck', 'step', 'tabindex', 'title'];
 
 function checkerForSeparator(separator) {
@@ -72,110 +72,6 @@ function tagsInput(input) {
 	const checker = checkerForSeparator(input.getAttribute('data-separator') || ',');
 	const allowDuplicates = checkAllowDuplicates();
 
-	function $(selector) {
-		return base.querySelector(selector);
-	}
-
-	function $$(selector) {
-		return base.querySelectorAll(selector);
-	}
-
-	function getValue() {
-		let value = [];
-		if (base.input.value) value.push(base.input.value);
-		$$('.tag').forEach(({ textContent }) => value.push(textContent));
-		return checker.join(value);
-	}
-
-	function setValue(value) {
-		$$('.tag').forEach(t => base.removeChild(t));
-		savePartialInput(value, true);
-	}
-
-	function save(init) {
-		input.value = getValue();
-		if (init) {
-			return;
-		}
-		input.dispatchEvent(new Event('change'));
-	}
-
-	function checkAllowDuplicates() {
-		const allow =
-			input.getAttribute('data-allow-duplicates') ||
-			input.getAttribute('duplicates');
-		return allow === 'on' || allow === '1' || allow === 'true';
-	}
-
-	// Return false if no need to add a tag
-	function addTag(text) {
-		let added = false;
-		function addOneTag(text) {
-			let tag = text && text.trim();
-			// Ignore if text is empty
-			if (!tag) return;
-
-			// Check input validity (eg, for pattern=)
-			// At tags-input init fill the base.input
-			base.input.value = text;
-			if (!base.input.checkValidity()) {
-				base.classList.add('error');
-				setTimeout(() => base.classList.remove('error'), 150);
-				return;
-			}
-
-			// For duplicates, briefly highlight the existing tag
-			if (!allowDuplicates) {
-				let exisingTag = $(`[data-tag="${tag}"]`);
-				if (exisingTag) {
-					exisingTag.classList.add('dupe');
-					setTimeout(() => exisingTag.classList.remove('dupe'), 100);
-					return;
-				}
-			}
-
-			base.insertBefore(
-				createElement('span', 'tag', tag, { tag }),
-				base.input
-			);
-			added = true;
-		}
-
-		// Add multiple tags if the user pastes in data with SEPERATOR already in it
-		checker.split(text).forEach(addOneTag);
-		return added;
-	}
-
-	function select(el) {
-		let sel = $('.selected');
-		if (sel) sel.classList.remove('selected');
-		if (el) el.classList.add('selected');
-	}
-
-	function savePartialInput(value, init) {
-		if (typeof value !== 'string' && !Array.isArray(value)) {
-			// If the base input does not contain a value, default to the original element passed
-			value = base.input.value;
-		}
-		if (addTag(value) !== false) {
-			base.input.value = '';
-			save(init);
-		}
-	}
-
-	function refocus(e) {
-		base.input.focus();
-		if (e.target.classList.contains('tag')) select(e.target);
-		if (e.target === base.input) return select();
-		e.preventDefault();
-		return false;
-	}
-
-	function dispatchEvent(name) {
-		const ce = new CustomEvent(`tags-input-${name}`, { bubbles: true });
-		input.dispatchEvent(ce);
-	}
-
 	insertAfter(input, base);
 	input.classList.add('visuallyhidden');
 
@@ -196,6 +92,8 @@ function tagsInput(input) {
 		}
 	});
 	base.appendChild(base.input);
+
+	const datalistShadow = makeDatalistShadow();
 
 	input.setAttribute('type', 'text');
 	input.tabIndex = -1;
@@ -285,6 +183,9 @@ function tagsInput(input) {
 		input.dispatchEvent(new Event('input'));
 	});
 
+	// handle selection from datalist
+	base.input.addEventListener('change', () => setTimeout(savePartialInput, 0));
+
 	// One tick after pasting, parse pasted text as CSV:
 	base.input.addEventListener('paste', () => setTimeout(savePartialInput, 0));
 
@@ -300,6 +201,7 @@ function tagsInput(input) {
 
 	// Add tags for existing values
 	savePartialInput(input.value, true);
+	datalistShadow?.update(getValues());
 
 	let self = { setValue, getValue };
 	Object.defineProperty(self, 'disabled', {
@@ -314,6 +216,138 @@ function tagsInput(input) {
 		}
 	});
 	return self;
+
+	function $(selector) {
+		return base.querySelector(selector);
+	}
+
+	function $$(selector) {
+		return base.querySelectorAll(selector);
+	}
+
+	function getValue(vv = getValues()) {
+		return checker.join(vv);
+	}
+
+	function getValues() {
+		let values = [];
+		$$('.tag').forEach(({ textContent }) => values.push(textContent));
+		if (base.input.value) values.unshift(base.input.value);
+		return values;
+	}
+
+	function setValue(value) {
+		$$('.tag').forEach(t => base.removeChild(t));
+		savePartialInput(value, true);
+	}
+
+	function save(init) {
+		const values = getValues();
+		input.value = getValue(values);
+		datalistShadow?.update(values);
+		if (init) {
+			return;
+		}
+		input.dispatchEvent(new Event('change'));
+	}
+
+	function checkAllowDuplicates() {
+		const allow =
+			input.getAttribute('data-allow-duplicates') ||
+			input.getAttribute('duplicates');
+		return allow === 'on' || allow === '1' || allow === 'true';
+	}
+
+	// Return false if no need to add a tag
+	function addTag(text) {
+		let added = false;
+		function addOneTag(text) {
+			let tag = text && text.trim();
+			// Ignore if text is empty
+			if (!tag) return;
+
+			// Check input validity (eg, for pattern=)
+			// At tags-input init fill the base.input
+			base.input.value = text;
+			if (!base.input.checkValidity()) {
+				base.classList.add('error');
+				setTimeout(() => base.classList.remove('error'), 150);
+				return;
+			}
+
+			// For duplicates, briefly highlight the existing tag
+			if (!allowDuplicates) {
+				let exisingTag = $(`[data-tag="${tag}"]`);
+				if (exisingTag) {
+					exisingTag.classList.add('dupe');
+					setTimeout(() => exisingTag.classList.remove('dupe'), 100);
+					return;
+				}
+			}
+
+			base.insertBefore(
+				createElement('span', 'tag', tag, { tag }),
+				base.input
+			);
+			added = true;
+		}
+
+		// Add multiple tags if the user pastes in data with SEPERATOR already in it
+		checker.split(text).forEach(addOneTag);
+		return added;
+	}
+
+	function select(el) {
+		let sel = $('.selected');
+		if (sel) sel.classList.remove('selected');
+		if (el) el.classList.add('selected');
+	}
+
+	function savePartialInput(value, init) {
+		if (typeof value !== 'string' && !Array.isArray(value)) {
+			// If the base input does not contain a value, default to the original element passed
+			value = base.input.value;
+		}
+		if (addTag(value) !== false) {
+			base.input.value = '';
+			save(init);
+		}
+	}
+
+	function refocus(e) {
+		base.input.focus();
+		if (e.target.classList.contains('tag')) select(e.target);
+		if (e.target === base.input) return select();
+		e.preventDefault();
+		return false;
+	}
+
+	function dispatchEvent(name) {
+		const ce = new CustomEvent(`tags-input-${name}`, { bubbles: true });
+		input.dispatchEvent(ce);
+	}
+
+	function makeDatalistShadow() {
+		// no need to maintain a shadow list if there's no original list or duplicates are allowed
+		if (!input.list || allowDuplicates) return;
+
+		const origList = document.getElementById(input.getAttribute('list'));
+		const datalist = origList.cloneNode();
+		datalist.id = `${origList.id}-tags-input`;
+		base.input.setAttribute('list', datalist.id);
+		insertAfter(origList, datalist);
+
+		return {
+			update
+		};
+
+		function update(values) {
+			datalist.innerHTML = '';
+			Array.from(origList.childNodes)
+				.filter(option => !values.includes(option.value))
+				.forEach(option => datalist.appendChild(option.cloneNode(true)));
+		}
+	}
 }
 
 // make life easier:
