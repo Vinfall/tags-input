@@ -1,4 +1,12 @@
 
+3.1.0 / 2024-02-25
+==================
+
+ * add better support for datalist / autocomplete
+ * improve demo
+ * remove polyfill for event.key
+ * remove polyfill for NodeList.forEach
+
 3.0.0 / 2019-04-12
 ==================
 
