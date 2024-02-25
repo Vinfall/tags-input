@@ -8,11 +8,11 @@ compile: build/build.js
 build:
 	mkdir -p $@
 
-build/build.js: $(SRC) | build node_modules
+build/build.js: demo/index.js $(SRC) | build node_modules
 	node_modules/.bin/esbuild \
 		--bundle \
 		--define:DEBUG="true" \
-		--global-name=tagsInput \
+		--sourcemap \
 		--outfile=$@ \
 		$<
 
