@@ -1,4 +1,10 @@
 
+3.1.1 / 2024-02-27
+==================
+
+ * use `insertAdjacentElement` to insert dom nodes
+ * improve support for cases when input is not in the document
+
 3.1.0 / 2024-02-25
 ==================
 
