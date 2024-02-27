@@ -51,12 +51,6 @@ function createElement(type, name, text, attributes) {
 	return el;
 }
 
-function insertAfter({ nextSibling, parentNode }, el) {
-	return nextSibling ?
-		parentNode.insertBefore(el, nextSibling) :
-		parentNode.appendChild(el);
-}
-
 function caretAtStart({ selectionStart, selectionEnd, value }) {
 	try {
 		return selectionStart === 0 && selectionEnd === 0;
@@ -72,7 +66,7 @@ function tagsInput(input) {
 	const checker = checkerForSeparator(input.getAttribute('data-separator') || ',');
 	const allowDuplicates = checkAllowDuplicates();
 
-	insertAfter(input, base);
+	input.insertAdjacentElement('afterend', base);
 	input.classList.add('visuallyhidden');
 
 	let inputType = input.getAttribute('type');
@@ -345,7 +339,7 @@ function tagsInput(input) {
 		const datalist = origList.cloneNode();
 		datalist.id = `${origList.id}-tags-input`;
 		base.input.setAttribute('list', datalist.id);
-		insertAfter(origList, datalist);
+		origList.insertAdjacentElement('afterend', datalist);
 
 		return {
 			update
