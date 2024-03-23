@@ -87,7 +87,7 @@ function tagsInput(input) {
 	});
 	base.appendChild(base.input);
 
-	const datalistShadow = makeDatalistShadow();
+	const datalistUpdater = makeDatalistUpdater();
 
 	input.setAttribute('type', 'text');
 	input.tabIndex = -1;
@@ -195,7 +195,6 @@ function tagsInput(input) {
 
 	// Add tags for existing values
 	savePartialInput(input.value, true);
-	datalistShadow?.update(getValues());
 
 	let self = { setValue, getValue };
 	Object.defineProperty(self, 'disabled', {
@@ -238,7 +237,7 @@ function tagsInput(input) {
 	function save(init) {
 		const values = getValues();
 		input.value = getValue(values);
-		datalistShadow?.update(values);
+		datalistUpdater?.update(values);
 		if (init) {
 			return;
 		}
@@ -305,6 +304,8 @@ function tagsInput(input) {
 		if (addTag(value) !== false) {
 			base.input.value = '';
 			save(init);
+		} else {
+			datalistUpdater?.update(getValues());
 		}
 	}
 
@@ -321,8 +322,8 @@ function tagsInput(input) {
 		input.dispatchEvent(ce);
 	}
 
-	function makeDatalistShadow() {
-		// use original list if duplicates are allowed
+	function makeDatalistUpdater() {
+		// no need to maintain if duplicates are allowed
 		if (allowDuplicates) return;
 
 		// cannot use input.list here because input might not be connected to the document yet
@@ -332,24 +333,22 @@ function tagsInput(input) {
 		if (!listId) return;
 
 		// use querySelector to find the list in case it's not connected to the document
-		const origList = document.getElementById(listId) ||
+		const datalist = document.getElementById(listId) ||
 			input.parentNode?.querySelector(`datalist#${listId}`);
-		if (!origList) return;
+		if (!datalist) return;
 
-		const datalist = origList.cloneNode();
-		datalist.id = `${origList.id}-tags-input`;
-		base.input.setAttribute('list', datalist.id);
-		origList.insertAdjacentElement('afterend', datalist);
+		// observe the datalist for changes
+		const observer = new MutationObserver(() => update(getValues()));
+		observer.observe(datalist, { childList: true });
 
 		return {
 			update
 		};
 
 		function update(values) {
-			datalist.innerHTML = '';
-			Array.from(origList.childNodes)
-				.filter(option => !values.includes(option.value))
-				.forEach(option => datalist.appendChild(option.cloneNode(true)));
+			for (const option of datalist.children) {
+				option.disabled = values.includes(option.value);
+			}
 		}
 	}
 }
