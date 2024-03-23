@@ -109,6 +109,11 @@ function tagsInput(input) {
 	});
 
 	base.input.addEventListener('keydown', e => {
+		// ignore keydown events when IME is active
+		if (e.isComposing || e.keyCode === 229) {
+			return;
+		}
+
 		let el = base.input;
 		let key = e.keyCode || e.which;
 		let separator = checker.test(e.key);
