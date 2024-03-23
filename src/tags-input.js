@@ -336,6 +336,10 @@ function tagsInput(input) {
 			input.parentNode?.querySelector(`datalist#${listId}`);
 		if (!datalist) return;
 
+		// observe the datalist for changes
+		const observer = new MutationObserver(() => update(getValues()));
+		observer.observe(datalist, { childList: true });
+
 		return {
 			update
 		};
