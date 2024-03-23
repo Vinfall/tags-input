@@ -195,7 +195,6 @@ function tagsInput(input) {
 
 	// Add tags for existing values
 	savePartialInput(input.value, true);
-	datalistUpdater?.update(getValues());
 
 	let self = { setValue, getValue };
 	Object.defineProperty(self, 'disabled', {
@@ -305,6 +304,8 @@ function tagsInput(input) {
 		if (addTag(value) !== false) {
 			base.input.value = '';
 			save(init);
+		} else {
+			datalistUpdater?.update(getValues());
 		}
 	}
 
