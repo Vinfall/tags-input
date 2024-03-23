@@ -1,4 +1,11 @@
 
+3.1.2 / 2024-03-23
+==================
+
+ * update datalist when empty input become active
+ * add mutation observer to properly react on datalist updates
+ * maintain a single datalist per input
+
 3.1.1 / 2024-02-27
 ==================
 
