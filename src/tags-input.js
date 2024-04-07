@@ -40,7 +40,7 @@ export class TagsInput extends HTMLInputElement {
 
         div.className = "tags-input";
         this.tagsNode.className = "tags";
-        this.checker = checkerForSeparator(this.getAttribute("data-separator"));
+        this.checker = checkerForSeparator(this.dataset.separator);
         this.editOnly = this.dataset.editOnly === "true"; // disables tag select mode
 
         copyAttributes(this, this.input);
